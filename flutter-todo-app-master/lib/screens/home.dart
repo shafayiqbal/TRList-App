@@ -4,6 +4,7 @@ import '../model/todo.dart';
 import '../constants/colors.dart';
 import '../widgets/todo_item.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:ui' as ui;
 
 class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
@@ -23,6 +24,47 @@ class _HomeState extends State<Home> {
     super.initState();
     _loadToDoList();
   }
+  void _showProfileOverlay() {
+    OverlayEntry overlayEntry = OverlayEntry(builder: (BuildContext context) {
+      return Positioned(
+        top: ui.window.padding.top + kToolbarHeight,
+        right: 8,
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 250,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Shafay Iqbal',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+                Text('shafay2iqbal@gmail.com'),
+                Text('Pending tasks: ${todosList.where((t) => !t.isDone).length}'),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+
+    Overlay.of(context)!.insert(overlayEntry);
+
+    // Close the overlay when tapping anywhere on the screen
+    Future.delayed(Duration(milliseconds: 50)).then((value) {
+      GestureBinding.instance!.pointerRouter.addGlobalRoute((event) {
+        if (event is PointerDownEvent) {
+          overlayEntry.remove();
+          GestureBinding.instance!.pointerRouter.removeGlobalRoute((event) {});
+        }
+      });
+    });
+  }
+
 
   _loadToDoList() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -313,14 +355,19 @@ Widget _buildDrawer() {
         },
       ),
       actions: [
-        Container(
-          height: 40,
-          width: 40,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset('assets/images/avatar.jpeg'),
+        GestureDetector(
+          onTap: _showProfileOverlay,
+          child: Container(
+            height: 40,
+            width: 40,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset('assets/images/avatar.jpeg'),
+            ),
           ),
         ),
+        // Add some padding to the right of the avatar
+        SizedBox(width: 8),
       ],
     );
   }
