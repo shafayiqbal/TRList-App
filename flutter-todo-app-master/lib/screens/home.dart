@@ -6,6 +6,8 @@ import '../widgets/todo_item.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
+import './trash.dart';
+
 
 
 
@@ -19,6 +21,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final todosList = <ToDo>[];
+  final trashList = <ToDo>[];
   List<ToDo> _foundToDo = [];
   final _todoController = TextEditingController();
 
@@ -72,20 +75,29 @@ class _HomeState extends State<Home> {
   _loadToDoList() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? jsonToDoList = prefs.getString('todoList');
+    String? jsonTrashList = prefs.getString('trashList'); // Add this line
     if (jsonToDoList != null) {
       List<dynamic> decodedJson = jsonDecode(jsonToDoList);
       todosList.addAll(decodedJson.map((item) => ToDo.fromJson(item)).toList());
+    }
+    if (jsonTrashList != null) { // Add this block
+      List<dynamic> decodedJson = jsonDecode(jsonTrashList);
+      trashList.addAll(decodedJson.map((item) => ToDo.fromJson(item)).toList());
     }
     setState(() {
       _foundToDo = todosList;
     });
   }
 
+
   _saveToDoList() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String jsonToDoList = jsonEncode(todosList);
+    String jsonTrashList = jsonEncode(trashList); // Add this line
     prefs.setString('todoList', jsonToDoList);
+    prefs.setString('trashList', jsonTrashList); // Add this line
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -239,8 +251,11 @@ Widget _buildDrawer() {
             style: TextStyle(color: Color(0xFF83E1FF)),
           ),
           onTap: () {
-            // Add navigation to the Trash screen
             Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Trash(trashList: trashList)),
+            );
           },
         ),
         ListTile(
@@ -269,6 +284,8 @@ Widget _buildDrawer() {
 
   void _deleteToDoItem(String id) {
     setState(() {
+      ToDo itemToRemove = todosList.firstWhere((item) => item.id == id);
+      trashList.add(itemToRemove);
       todosList.removeWhere((item) => item.id == id);
     });
     _saveToDoList();
