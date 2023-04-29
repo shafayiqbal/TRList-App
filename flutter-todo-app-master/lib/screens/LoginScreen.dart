@@ -16,7 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool isRememberMe = false;
   Future<void> login(String email, String password) async {
-    // final headers = {'Access-Control-Allow-Origin': '*'};
     final uri = Uri.parse('$authEndpoint?email=$email&password=$password');
     final response = await http.get(uri);
 
