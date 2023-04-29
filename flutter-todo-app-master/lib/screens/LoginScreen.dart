@@ -12,17 +12,39 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool? isRememberMe = false;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool isRememberMe = false;
 
   Future<void> check_credentials(String email, String password) async {
+    if (email == "admin" && password == "admin") {
+      Navigator.pushNamed(context, '/home');
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text("Invalid email or password"),
+            actions: [
+              TextButton(
+                child: Text('OK'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> authenticateUser() async {
     final http.Response response = await http.post(
       Uri.parse(authEndpoint),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'email': email,
-        'password': password,
+        'email': emailController.text,
+        'password': passwordController.text,
       }),
     );
 
@@ -152,12 +174,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 activeColor: Colors.white,
                 onChanged: (value) {
                   setState(() {
-                    isRememberMe = value;
+                    isRememberMe = value ?? false;
                   });
                 },
               )),
           Text(
-            'Remeber Me',
+            'Remember Me',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           )
         ],
@@ -170,38 +192,17 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: EdgeInsets.symmetric(vertical: 25),
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () async {
-            // Send the email and password to the backend for authentication
-            final http.Response response = await http.post(
-              Uri.parse(authEndpoint),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'email': emailController.text,
-                'password': passwordController.text,
-              }),
-            );
-
-            // If the response indicates successful authentication,
-            // store the authentication token and navigate to the main screen
-            if (response.statusCode == 200) {
-              final Map<String, dynamic> responseBody =
-                  jsonDecode(response.body);
-              final String authToken = responseBody['token'];
-              // TODO: Store authToken locally on the device for subsequent requests
-
-              // Navigate to the main screen
-              Navigator.pushNamed(context, '/main');
+          onPressed: () {
+            // Check if the provided email and password match "admin" and "admin"
+            if (emailController.text == "admin" && passwordController.text == "admin") {
+              Navigator.pushNamed(context, '/home');
             } else {
-              // If the authentication failed, display an error message
-              final Map<String, dynamic> responseBody =
-                  jsonDecode(response.body);
-              final String errorMessage = responseBody['message'];
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text('Error'),
-                    content: Text(errorMessage),
+                    content: Text("Invalid email or password"),
                     actions: [
                       TextButton(
                         child: Text('OK'),
@@ -228,6 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ));
   }
+
 
   Widget buildSignupBtn() {
     return GestureDetector(
@@ -265,13 +267,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                         gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                          Color(0xFF16A0E5),
-                          Color(0xFF16A3E5),
-                          Color(0xFF16A5E5),
-                          Color(0xFF16A9E5)
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF83E1FF),
+                          Colors.black,
                         ])),
                     child: SingleChildScrollView(
                       physics: AlwaysScrollableScrollPhysics(),

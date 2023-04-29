@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import './trash.dart';
+import './LoginScreen.dart';
 
 
 
@@ -269,6 +270,21 @@ Widget _buildDrawer() {
             Navigator.pop(context);
           },
         ),
+        ListTile(
+          leading: Icon(Icons.logout),
+          title: Text(
+            'Logout',
+            style: TextStyle(color: Color(0xFF83E1FF)),
+          ),
+          onTap: () {
+          // Navigate to the Login screen and remove all previous routes
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+            (Route<dynamic> route) => false,
+          );
+        },
+        )
       ],
     ),
   );
