@@ -15,17 +15,24 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isRememberMe = false;
+  Future<void> login(String email, String password) async {
+    final uri = Uri.parse('$authEndpoint?email=$email&password=$password');
+    final response = await http.get(uri);
 
-  Future<void> check_credentials(String email, String password) async {
-    if (email == "admin" && password == "admin") {
-      Navigator.pushNamed(context, '/home');
+    if (response.statusCode == 200) {
+      // login success
+      final responseData = jsonDecode(response.body);
+      print("Successful Login");
+      Navigator.pushNamed(context, '/Home');
+      // do something with responseData
     } else {
+      print("Login Failed");
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('Error'),
-            content: Text("Invalid email or password"),
+            content: Text("Incorrect email or password"),
             actions: [
               TextButton(
                 child: Text('OK'),
@@ -35,9 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         },
       );
+      // login failed
+      // handle error
     }
   }
-
   Future<void> authenticateUser() async {
     final http.Response response = await http.post(
       Uri.parse(authEndpoint),
