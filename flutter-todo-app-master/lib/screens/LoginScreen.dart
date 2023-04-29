@@ -4,7 +4,7 @@ import '../constants/colors.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-final String authEndpoint = 'https://example.com/api/auth';
+final String authEndpoint = 'http://127.0.0.1:8000/login';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -12,57 +12,29 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  bool isRememberMe = false;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool? isRememberMe = false;
 
-  Future<void> check_credentials(String email, String password) async {
-    if (email == "admin" && password == "admin") {
-      Navigator.pushNamed(context, '/home');
-    } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Error'),
-            content: Text("Invalid email or password"),
-            actions: [
-              TextButton(
-                child: Text('OK'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          );
-        },
-      );
-    }
-  }
-
-  Future<void> authenticateUser() async {
-    final http.Response response = await http.post(
-      Uri.parse(authEndpoint),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailController.text,
-        'password': passwordController.text,
-      }),
-    );
+  Future<void> login(String email, String password) async {
+    // final headers = {'Access-Control-Allow-Origin': '*'};
+    final uri = Uri.parse('$authEndpoint?email=$email&password=$password');
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> responseBody = jsonDecode(response.body);
-      final String authToken = responseBody['token'];
-      // TODO: Store authToken locally on the device for subsequent requests
-
-      Navigator.pushNamed(context, '/main');
+      // login success
+      final responseData = jsonDecode(response.body);
+      print("Successful Login");
+      Navigator.pushNamed(context, '/Home');
+      // do something with responseData
     } else {
-      final Map<String, dynamic> responseBody = jsonDecode(response.body);
-      final String errorMessage = responseBody['message'];
+      print("Login Failed");
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('Error'),
-            content: Text(errorMessage),
+            content: Text("Incorrect email or password"),
             actions: [
               TextButton(
                 child: Text('OK'),
@@ -72,6 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         },
       );
+      // login failed
+      // handle error
     }
   }
 
@@ -174,12 +148,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 activeColor: Colors.white,
                 onChanged: (value) {
                   setState(() {
-                    isRememberMe = value ?? false;
+                    isRememberMe = value;
                   });
                 },
               )),
           Text(
-            'Remember Me',
+            'Remeber Me',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           )
         ],
@@ -193,26 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () {
-            // Check if the provided email and password match "admin" and "admin"
-            if (emailController.text == "admin" && passwordController.text == "admin") {
-              Navigator.pushNamed(context, '/home');
-            } else {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text('Error'),
-                    content: Text("Invalid email or password"),
-                    actions: [
-                      TextButton(
-                        child: Text('OK'),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  );
-                },
-              );
-            }
+            login(emailController.text, passwordController.text);
           },
           style: ElevatedButton.styleFrom(
             elevation: 5,
@@ -229,7 +184,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ));
   }
-
 
   Widget buildSignupBtn() {
     return GestureDetector(
@@ -267,11 +221,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                         gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF83E1FF),
-                          Colors.black,
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                          Color(0xFF16A0E5),
+                          Color(0xFF16A3E5),
+                          Color(0xFF16A5E5),
+                          Color(0xFF16A9E5)
                         ])),
                     child: SingleChildScrollView(
                       physics: AlwaysScrollableScrollPhysics(),
