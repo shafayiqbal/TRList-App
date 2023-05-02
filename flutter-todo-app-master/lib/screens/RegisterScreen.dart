@@ -5,6 +5,7 @@ import '../constants/colors.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final String authEndpoint = 'http://127.0.0.1:8000/add/';
 
@@ -43,17 +44,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String password = _passwordController.text.trim();
     String confirmpassword = _confirmpasswordController.text.trim();
 
-    if (email == "" || password == "" || confirmpassword == "") {
+    if (email.isEmpty || password.isEmpty || confirmpassword.isEmpty) {
       incaseError("Invalid fields");
+    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      incaseError("Invalid email format");
     } else if (password != confirmpassword) {
       incaseError("Passwords do not match");
+    } else if (password.length < 6) {
+      incaseError("Password too weak");
     } else {
       try {
-        UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
-        print("User created successfully");
-        Navigator.pushNamed(context, '/login');
-      } on FirebaseAuthException catch (ex) {
+        final QuerySnapshot result = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .get();
+        final List<DocumentSnapshot> documents = result.docs;
+        if (documents.isNotEmpty) {
+          incaseError("Email already exists");
+        } else {
+          await FirebaseFirestore.instance.collection('users').doc(email).set({
+            'email': email,
+            'password': password,
+          });
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(email)
+              .collection('todoList')
+              .doc()
+              .set({});
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(email)
+              .collection('trashList')
+              .doc()
+              .set({});
+          print("User created successfully");
+          Navigator.pushNamed(context, '/login');
+        }
+      } on FirebaseException catch (ex) {
         incaseError(ex.code.toString());
       }
     }

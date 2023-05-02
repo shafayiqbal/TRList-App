@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import '../constants/colors.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final String authEndpoint = '';
 
@@ -25,16 +26,49 @@ class _LoginScreenState extends State<LoginScreen> {
     Firebase.initializeApp();
   }
 
+  // Future<void> authenticateUser() async {
+  //   try {
+  //     UserCredential userCredential =
+  //         await FirebaseAuth.instance.signInWithEmailAndPassword(
+  //       email: emailController.text,
+  //       password: passwordController.text,
+  //     );
+
+  //     // If authentication is successful, navigate to the main screen
+  //     Navigator.pushNamed(context, '/home');
+  //   } catch (e) {
+  //     // If authentication fails, show an error dialog
+  //     showDialog(
+  //       context: context,
+  //       builder: (BuildContext context) {
+  //         return AlertDialog(
+  //           title: Text('Error'),
+  //           content: Text('Username/Password is incorrect.'),
+  //           actions: [
+  //             TextButton(
+  //               child: Text('OK'),
+  //               onPressed: () => Navigator.of(context).pop(),
+  //             ),
+  //           ],
+  //         );
+  //       },
+  //     );
+  //   }
+  // }
   Future<void> authenticateUser() async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-      
-      // If authentication is successful, navigate to the main screen
-      Navigator.pushNamed(context, '/home');
-    } catch (e) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: emailController.text)
+          .get();
+      if (snapshot.docs.isNotEmpty) {
+        final user = snapshot.docs.first;
+        if (user['password'] == passwordController.text) {
+          // If authentication is successful, navigate to the main screen
+          Navigator.pushNamed(context, '/home');
+          return;
+        }
+      }
       // If authentication fails, show an error dialog
       showDialog(
         context: context,
@@ -51,6 +85,8 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         },
       );
+    } catch (e) {
+      print('Error authenticating user: $e');
     }
   }
 
@@ -287,7 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(height: 20),
                       buildPassword(),
                       buildForgotPassBtn(),
-                      buildRememberCB(),
+                      //buildRememberCB(),
                       buildLoginBtn(),
                       buildSignupBtn(),
                     ],

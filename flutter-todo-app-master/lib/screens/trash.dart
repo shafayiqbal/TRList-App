@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/todo.dart';
-import './home.dart';
-
+import 'Home.dart';
 
 class Trash extends StatefulWidget {
   final List<ToDo> trashList;
@@ -49,24 +48,24 @@ class _TrashState extends State<Trash> {
     );
   }
 
-    Widget _buildDrawer() {
+  Widget _buildDrawer() {
     return Drawer(
-        child: ListView(
+      child: ListView(
         padding: EdgeInsets.zero,
         children: [
-            DrawerHeader(
+          DrawerHeader(
             decoration: BoxDecoration(
-                color: Color(0xFF83E1FF),
+              color: Color(0xFF83E1FF),
             ),
             child: Text(
-                'TR List\nBy Team Reach',
-                style: TextStyle(
+              'TR List\nBy Team Reach',
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
-                ),
+              ),
             ),
-            ),
-           ListTile(
+          ),
+          ListTile(
             leading: Icon(Icons.home),
             title: Text(
               'Home',
@@ -79,43 +78,44 @@ class _TrashState extends State<Trash> {
               );
             },
           ),
-            ListTile(
+          ListTile(
             leading: Icon(Icons.settings),
             title: Text(
-                'Settings',
-                style: TextStyle(color: Color(0xFF83E1FF)),
+              'Settings',
+              style: TextStyle(color: Color(0xFF83E1FF)),
             ),
             onTap: () {
-                // Add navigation to the Settings screen
-                Navigator.pop(context);
+              // Add navigation to the Settings screen
+              Navigator.pop(context);
             },
-            ),
-            ListTile(
+          ),
+          ListTile(
             leading: Icon(Icons.delete),
             title: Text(
-                'Trash',
-                style: TextStyle(color: Color(0xFF83E1FF)),
+              'Trash',
+              style: TextStyle(color: Color(0xFF83E1FF)),
             ),
             onTap: () {
-                Navigator.pop(context);
-             },
-            ),
-            ListTile(
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
             leading: Icon(Icons.help),
             title: Text(
-                'Help',
-                style: TextStyle(color: Color(0xFF83E1FF)),
+              'Help',
+              style: TextStyle(color: Color(0xFF83E1FF)),
             ),
             onTap: () {
-                // Add navigation to the Help screen
-                Navigator.pop(context);
+              // Add navigation to the Help screen
+              Navigator.pop(context);
             },
-            ),
+          ),
         ],
-        ),
+      ),
     );
-    }
- AppBar _buildAppBar() {
+  }
+
+  AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: Color(0xFF83E1FF),
       elevation: 0,
@@ -139,5 +139,4 @@ class _TrashState extends State<Trash> {
       ),
     );
   }
-
 }
