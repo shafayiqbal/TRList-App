@@ -7,6 +7,9 @@ import 'screens/HeroPage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/RegisterScreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 
 void main() async {
@@ -32,9 +35,9 @@ class MyApp extends StatelessWidget {
       ),
       home: HeroPage(),
       routes: {
-        '/login': (context) => LoginScreen(),
-        '/home': (context) => Home(),
-        '/register': (context) => RegisterScreen(),
+      '/login': (context) => LoginScreen(),
+      '/home': (context) => Home(user: FirebaseAuth.instance.currentUser!),
+      '/register': (context) => RegisterScreen(),
       },
     );
   }

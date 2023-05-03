@@ -1,16 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/todo.dart';
 import './home.dart';
 
-
 class Trash extends StatefulWidget {
   final List<ToDo> trashList;
+  final User user; // Add this line
 
-  Trash({required this.trashList});
+  Trash({required this.trashList, required this.user}); // Update this line
 
   @override
   _TrashState createState() => _TrashState();
 }
+
 
 class _TrashState extends State<Trash> {
   @override
@@ -49,24 +51,24 @@ class _TrashState extends State<Trash> {
     );
   }
 
-    Widget _buildDrawer() {
+  Widget _buildDrawer() {
     return Drawer(
-        child: ListView(
+      child: ListView(
         padding: EdgeInsets.zero,
         children: [
-            DrawerHeader(
+          DrawerHeader(
             decoration: BoxDecoration(
-                color: Color(0xFF83E1FF),
+              color: Color(0xFF83E1FF),
             ),
             child: Text(
-                'TR List\nBy Team Reach',
-                style: TextStyle(
+              'TR List\nBy Team Reach',
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
-                ),
+              ),
             ),
-            ),
-           ListTile(
+          ),
+          ListTile(
             leading: Icon(Icons.home),
             title: Text(
               'Home',
@@ -75,7 +77,9 @@ class _TrashState extends State<Trash> {
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => Home()),
+                MaterialPageRoute(
+                  builder: (context) => Home(user: widget.user),
+                ),
               );
             },
           ),

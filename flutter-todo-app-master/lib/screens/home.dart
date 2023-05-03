@@ -8,22 +8,28 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import './trash.dart';
 import './LoginScreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 
 
 
 class Home extends StatefulWidget {
-  Home({Key? key}) : super(key: key);
+  final User user;
+  Home({Key? key, required this.user}) : super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
 }
 
+
 class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final todosList = <ToDo>[];
-  final trashList = <ToDo>[];
   List<ToDo> _foundToDo = [];
+  List<ToDo> todosList = [];
+  List<ToDo> trashList = [];
+
   final _todoController = TextEditingController();
 
   @override
@@ -74,30 +80,65 @@ class _HomeState extends State<Home> {
 
 
   _loadToDoList() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? jsonToDoList = prefs.getString('todoList');
-    String? jsonTrashList = prefs.getString('trashList'); // Add this line
-    if (jsonToDoList != null) {
-      List<dynamic> decodedJson = jsonDecode(jsonToDoList);
-      todosList.addAll(decodedJson.map((item) => ToDo.fromJson(item)).toList());
-    }
-    if (jsonTrashList != null) { // Add this block
-      List<dynamic> decodedJson = jsonDecode(jsonTrashList);
-      trashList.addAll(decodedJson.map((item) => ToDo.fromJson(item)).toList());
-    }
+    CollectionReference todosCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .collection('todoList');
+        
+    QuerySnapshot todosSnapshot = await todosCollection.get();
+    todosList = todosSnapshot.docs
+        .map((doc) => ToDo.fromJson(doc.data() as Map<String, dynamic>))
+        .toList();
+
+    CollectionReference trashCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .collection('trashList');
+        
+    QuerySnapshot trashSnapshot = await trashCollection.get();
+    trashList = trashSnapshot.docs
+        .map((doc) => ToDo.fromJson(doc.data() as Map<String, dynamic>))
+        .toList();
+
     setState(() {
       _foundToDo = todosList;
     });
   }
 
 
+
   _saveToDoList() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String jsonToDoList = jsonEncode(todosList);
-    String jsonTrashList = jsonEncode(trashList); // Add this line
-    prefs.setString('todoList', jsonToDoList);
-    prefs.setString('trashList', jsonTrashList); // Add this line
+    CollectionReference todosCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .collection('todoList');
+
+    todosCollection.get().then((snapshot) {
+      for (DocumentSnapshot doc in snapshot.docs) {
+        doc.reference.delete();
+      }
+    });
+
+    for (ToDo todo in todosList) {
+      todosCollection.add(todo.toJson());
+    }
+
+    CollectionReference trashCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .collection('trashList');
+
+    trashCollection.get().then((snapshot) {
+      for (DocumentSnapshot doc in snapshot.docs) {
+        doc.reference.delete();
+      }
+    });
+
+    for (ToDo todo in trashList) {
+      trashCollection.add(todo.toJson());
+    }
   }
+
 
 
   @override
@@ -255,7 +296,7 @@ Widget _buildDrawer() {
             Navigator.pop(context);
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Trash(trashList: trashList)),
+              MaterialPageRoute(builder: (context) => Trash(trashList: trashList, user: widget.user)),
             );
           },
         ),
@@ -303,29 +344,53 @@ Widget _buildDrawer() {
       ToDo itemToRemove = todosList.firstWhere((item) => item.id == id);
       trashList.add(itemToRemove);
       todosList.removeWhere((item) => item.id == id);
+
+      // Delete the note from Cloud Firestore
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.uid)
+          .collection('todoList')
+          .doc(itemToRemove.id)
+          .delete();
+
+      // Add the note to the trash in Cloud Firestore
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.uid)
+          .collection('trashList')
+          .doc(itemToRemove.id)
+          .set(itemToRemove.toJson());
     });
-    _saveToDoList();
   }
 
+
   void _addToDoItem(String toDo) {
-    if (toDo.length==0){
+    if (toDo.length == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:Text(
-            "Oops, looks like you entered an empty note, Try Again!")
-            ,)
-          ,);
+          content: Text("Oops, looks like you entered an empty note, Try Again!"),
+        ),
+      );
       return;
     }
     setState(() {
-      todosList.add(ToDo(
+      ToDo newTodo = ToDo(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         todoText: toDo,
-      ));
+      );
+      todosList.add(newTodo);
+
+      // Add the new note to Cloud Firestore
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.uid)
+          .collection('todoList')
+          .doc(newTodo.id)
+          .set(newTodo.toJson());
     });
     _todoController.clear();
-    _saveToDoList();
   }
+
 
   void _runFilter(String enteredKeyword) {
     List<ToDo> results = [];
